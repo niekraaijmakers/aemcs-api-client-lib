@@ -16,32 +16,41 @@ In the AEM Developer Console, create an **OAuth Server-to-Server (S2S)** technic
 
 Use the actual `technicalAccount.clientSecret` value, not the secret ID shown in the account's secret list. Use the `imsEndpoint` and `scopes` from your credential JSON; JWT `metascopes` are not OAuth scopes.
 
-The example accepts this structure:
+The helper and CLI accept the complete S2S credential response from the AEM Developer Console, without extracting or reshaping the `integration` object:
 
 ```json
 {
+  "ok": true,
   "integration": {
     "imsEndpoint": "ims-na1.adobelogin.com",
-    "technicalAccount": {
-      "clientId": "your-client-id",
-      "clientSecret": "your-client-secret"
-    },
     "scopes": [
       "read_pc.dma_aem_ams",
       "openid",
       "AdobeID",
       "read_organizations",
       "additional_info.projectedProductContext"
-    ]
-  }
+    ],
+    "technicalAccount": {
+      "clientId": "your-client-id",
+      "clientSecret": "your-client-secret"
+    },
+    "email": "your-technical-account@techacct.adobe.com",
+    "id": "your-technical-account-id@techacct.adobe.com",
+    "org": "your-org-id@AdobeOrg",
+    "secretId": "your-secret-id",
+    "revoked": false
+  },
+  "statusCode": 200
 }
 ```
 
-These are placeholders. Copy the values and scopes from your own OAuth credential JSON rather than using this example unchanged. Additional fields in the downloaded JSON are accepted but are not needed to request a token.
+These are placeholders. Copy the values and scopes from your own OAuth credential JSON rather than using this example unchanged. Keep the supplied `imsEndpoint`, including `ims-na1-stg1.adobelogin.com` for stage credentials. The helper uses only `integration.imsEndpoint`, `integration.technicalAccount.clientId`, `integration.technicalAccount.clientSecret`, and `integration.scopes`; the response wrapper and account/secret metadata are accepted but are not sent to IMS.
 
 Keep the file private and do not commit it. `downloaded_integration.json` is ignored by Git in this repository. In a deployed application, load credentials from a secret manager or another access-controlled store instead of storing them in source code.
 
 ## Request an access token
+
+Pass the parsed JSON object directly to `requestAccessToken(credentials)`, just as the legacy example passes its object to `exchange(config)`. The object can come from a credentials API response or a local JSON file; the helper does not require a filename. See [Call an AEM API](#call-an-aem-api) for programmatic usage.
 
 From a checkout of this repository:
 

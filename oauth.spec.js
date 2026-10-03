@@ -23,6 +23,29 @@ function credentials() {
     };
 }
 
+function fullCredentials() {
+    return {
+        ok: true,
+        integration: {
+            ...credentials().integration,
+            imsEndpoint: 'ims-na1-stg1.adobelogin.com',
+            scopes: [
+                'read_pc.dma_aem_ams',
+                'openid',
+                'AdobeID',
+                'read_organizations',
+                'additional_info.projectedProductContext'
+            ],
+            email: 'example-account@techacct.adobe.com',
+            id: 'example-account-id@techacct.adobe.com',
+            org: 'example-org@AdobeOrg',
+            secretId: 'example-secret-id',
+            revoked: false
+        },
+        statusCode: 200
+    };
+}
+
 const token = {
     access_token: 'fake-access-token',
     token_type: 'bearer',
@@ -62,6 +85,23 @@ test('uses the configured stage IMS hostname and supports a single scope', async
         return Response.json(token);
     });
     assert.deepEqual(await requestAccessToken(config), token);
+});
+
+test('accepts the full S2S credential response object without reshaping or mutation', async (t) => {
+    const config = fullCredentials();
+    const original = structuredClone(config);
+    t.mock.method(globalThis, 'fetch', async (url, options) => {
+        assert.equal(url, 'https://ims-na1-stg1.adobelogin.com/ims/token/v3');
+        assert.deepEqual(Object.fromEntries(options.body), {
+            grant_type: 'client_credentials',
+            client_id: config.integration.technicalAccount.clientId,
+            client_secret: config.integration.technicalAccount.clientSecret,
+            scope: config.integration.scopes.join(',')
+        });
+        return Response.json(token);
+    });
+    assert.deepEqual(await requestAccessToken(config), token);
+    assert.deepEqual(config, original);
 });
 
 for (const field of ['imsEndpoint', 'clientId', 'clientSecret']) {
@@ -201,6 +241,13 @@ function runCli(t, contents, { args, status = 200 } = {}) {
 
 test('CLI prints the token response and exits successfully', (t) => {
     const result = runCli(t, JSON.stringify(credentials()));
+    assert.equal(result.status, 0);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(JSON.parse(result.stdout), token);
+});
+
+test('CLI accepts the full S2S credential response JSON', (t) => {
+    const result = runCli(t, JSON.stringify(fullCredentials()));
     assert.equal(result.status, 0);
     assert.equal(result.stderr, '');
     assert.deepEqual(JSON.parse(result.stdout), token);
