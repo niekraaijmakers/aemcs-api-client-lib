@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const requestAccessToken = require('./oauth');
+const requestAccessToken = require('./oauth-s2s');
 const exchangeJwt = require('./index');
 
 function credentials() {
@@ -233,7 +233,7 @@ function runCli(t, contents, { args, status = 200 } = {}) {
         fs.unlinkSync(preload);
         fs.rmdirSync(directory);
     });
-    return spawnSync(process.execPath, ['--require', preload, 'oauth-cli.js', ...(args || [jsonfile])], {
+    return spawnSync(process.execPath, ['--require', preload, 'oauth-s2s-cli.js', ...(args || [jsonfile])], {
         cwd: __dirname,
         encoding: 'utf8'
     });
@@ -256,7 +256,7 @@ test('CLI accepts the full S2S credential response JSON', (t) => {
 test('CLI reports usage with exit code 2 when no file is supplied', (t) => {
     const result = runCli(t, '', { args: [] });
     assert.equal(result.status, 2);
-    assert.match(result.stderr, /Usage: node oauth-cli.js <jsonfile>/);
+    assert.match(result.stderr, /Usage: node oauth-s2s-cli.js <jsonfile>/);
     assert.equal(result.stdout, '');
 });
 

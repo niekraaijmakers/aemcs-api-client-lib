@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "test": "node index.spec.js",
-    "test:oauth": "node --test oauth.spec.js"
+    "test:oauth": "node --test oauth-s2s.spec.js"
   },
   "repository": {
     "type": "git",

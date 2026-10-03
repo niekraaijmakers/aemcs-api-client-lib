@@ -13,10 +13,10 @@ governing permissions and limitations under the License.
 */
 
 const fs = require('node:fs');
-const requestAccessToken = require('./oauth');
+const requestAccessToken = require('./oauth-s2s');
 
 if (process.argv.length !== 3) {
-    console.error('Usage: node oauth-cli.js <jsonfile>');
+    console.error('Usage: node oauth-s2s-cli.js <jsonfile>');
     process.exit(2);
 }
 

@@ -55,7 +55,7 @@ Pass the parsed JSON object directly to `requestAccessToken(credentials)`, just 
 From a checkout of this repository:
 
 ```sh
-node oauth-cli.js downloaded_integration.json
+node oauth-s2s-cli.js downloaded_integration.json
 ```
 
 The CLI reads the file and prints the IMS token response:
@@ -70,7 +70,7 @@ The CLI reads the file and prints the IMS token response:
 
 **The CLI output contains a sensitive access token.** Do not send it to shared logs or publish it.
 
-The request in [oauth.js](oauth.js) is a form-encoded POST to `https://<imsEndpoint>/ims/token/v3` with:
+The request in [oauth-s2s.js](oauth-s2s.js) is a form-encoded POST to `https://<imsEndpoint>/ims/token/v3` with:
 
 | Parameter | Value |
 | --- | --- |
@@ -83,11 +83,11 @@ The example rejects redirects and limits each token request to 30 seconds. Faile
 
 ## Call an AEM API
 
-Import the OAuth example explicitly as `require('./oauth')`. The existing `index.js` export and `cli.js exchange` command remain the legacy JWT examples.
+Import the OAuth example explicitly as `require('./oauth-s2s')`. The existing `index.js` export and `cli.js exchange` command remain the legacy JWT examples.
 
 ```javascript
 const fs = require('node:fs');
-const requestAccessToken = require('./oauth');
+const requestAccessToken = require('./oauth-s2s');
 
 async function main() {
     const credentials = JSON.parse(
