@@ -12,15 +12,20 @@ This repository contains minimal Node.js examples for authenticating server-side
 
 ## Save the credentials
 
-In the AEM Developer Console, create an **OAuth Server-to-Server (S2S)** technical account. Select **View** on an active client secret and save its credential JSON as `downloaded_integration.json`.
+In the AEM Developer Console, create an **OAuth Server-to-Server (S2S)** technical account. The console shows the client secret only once, in the **Save your client secret** dialog that follows creation, and does not store it. Select **Download credentials** in that dialog to save the credentials as `aem-s2s-credentials.json`. **View** on a client secret later shows the credentials without the secret value, so it cannot be used to obtain a token. If the secret is lost, create a new secret for the account.
 
-Use the actual `technicalAccount.clientSecret` value, not the secret ID shown in the account's secret list. Use the `imsEndpoint` and `scopes` from your credential JSON; JWT `metascopes` are not OAuth scopes.
+Use the actual `technicalAccount.clientSecret` value, not the secret ID shown in the account's secret list. Use the `imsEndpoint` and `scopes` from your credentials; JWT `metascopes` are not OAuth scopes.
 
-The helper and CLI accept the complete S2S credential response from the AEM Developer Console, without extracting or reshaping the `integration` object:
+The helper and CLI expect the credentials inside a top-level `integration` object. The downloaded file contains the credentials without this wrapper, so wrap its content:
+
+```sh
+jq '{integration: .}' aem-s2s-credentials.json > downloaded_integration.json
+```
+
+Alternatively, edit the file so that its complete content becomes the value of a top-level `integration` field. The result looks like this:
 
 ```json
 {
-  "ok": true,
   "integration": {
     "imsEndpoint": "ims-na1.adobelogin.com",
     "scopes": [
@@ -36,21 +41,18 @@ The helper and CLI accept the complete S2S credential response from the AEM Deve
     },
     "email": "your-technical-account@techacct.adobe.com",
     "id": "your-technical-account-id@techacct.adobe.com",
-    "org": "your-org-id@AdobeOrg",
-    "secretId": "your-secret-id",
-    "revoked": false
-  },
-  "statusCode": 200
+    "org": "your-org-id@AdobeOrg"
+  }
 }
 ```
 
-These are placeholders. Copy the values and scopes from your own OAuth credential JSON rather than using this example unchanged. Keep the supplied `imsEndpoint`, including `ims-na1-stg1.adobelogin.com` for stage credentials. The helper uses only `integration.imsEndpoint`, `integration.technicalAccount.clientId`, `integration.technicalAccount.clientSecret`, and `integration.scopes`; the response wrapper and account/secret metadata are accepted but are not sent to IMS.
+These are placeholders. Copy the values and scopes from your own credentials rather than using this example unchanged. Keep the supplied `imsEndpoint`, including `ims-na1-stg1.adobelogin.com` for stage credentials. The helper uses only `integration.imsEndpoint`, `integration.technicalAccount.clientId`, `integration.technicalAccount.clientSecret`, and `integration.scopes`; other fields are accepted but are not sent to IMS.
 
 Keep the file private and do not commit it. `downloaded_integration.json` is ignored by Git in this repository. In a deployed application, load credentials from a secret manager or another access-controlled store instead of storing them in source code.
 
 ## Request an access token
 
-Pass the parsed JSON object directly to `requestAccessToken(credentials)`, just as the legacy example passes its object to `exchange(config)`. The object can come from a credentials API response or a local JSON file; the helper does not require a filename. See [Call an AEM API](#call-an-aem-api) for programmatic usage.
+Pass the parsed JSON object directly to `requestAccessToken(credentials)`, just as the legacy example passes its object to `exchange(config)`. The object can come from a local JSON file or any other source that provides the wrapped credentials; the helper does not require a filename. See [Call an AEM API](#call-an-aem-api) for programmatic usage.
 
 From a checkout of this repository:
 
@@ -116,7 +118,7 @@ For a long-running application, cache and reuse access tokens until shortly befo
 
 ## Rotate a client secret
 
-Create a replacement secret in the AEM Developer Console and retrieve its credential JSON. Update every application using the account, then request a fresh token and verify AEM access with the replacement secret before revoking the old secret.
+Create a replacement secret in the AEM Developer Console and save its credentials from the dialog that shows the new secret; the console shows it only once. Replace `technicalAccount.clientSecret` in the credentials every application using the account loads with the new value, then request a fresh token and verify AEM access with the replacement secret before revoking the old secret. Revoking a secret in the AEM Developer Console requires that secret's value.
 
 The authentication code does not change: it uses the selected `technicalAccount.clientSecret`. Revocation can take time to propagate and does not necessarily invalidate already-issued access tokens. Follow the console's secret-management guidance when verifying revocation.
 
